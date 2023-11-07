@@ -1,0 +1,317 @@
+
+---
+title: "The Julia Programming Language"
+author: "Stephen Checkley"
+format:
+  revealjs:
+    logo: ./images/logo.png
+    css: logo.css
+    footer: "RSE Skills 'n' Learn, 7th Nov 2023"
+---
+
+## Introduction
+
+- Julia is a high-level, general-purpose, and fast dynamic programming language.
+- Created to combine the ease of use of a scripting language with the performance of a compiled language.
+- Solve the "two language problem".
+
+## History
+
+- Julia development began in 2009 by Jeff Bezanson, Stefan Karpinski, Viral B. Shah, and Alan Edelman.
+- Language syntax considered stable since version 1.0 in 2018.
+- Julia has built-in support for calling C, Fortran, Python, R, C++, Java, and SQL inline with Julia code.
+
+## Adoption {.smaller .scrollable}
+
+::: {#fig-stars layout-ncol=1}
+
+![Github stars](./images/usage_stats.png)
+
+Github Julia and package stars
+
+:::
+
+<https://info.juliahub.com/newsletter-january-2022-julia-growth-statistics>
+
+
+## Adoption {.smaller .scrollable}
+Julia did make the top 20 in August TIOBE index (honest!). Currently 28:
+
+::: {#fig-tiobe layout-ncol=1}
+
+![TIOBE index](./images/tiobe.png)
+
+October 2023 TIOBE index
+
+:::
+
+## Adoption {.smaller .scrollable}
+
+Lots of Github Julia organisations:
+
+::: {#fig-orgs layout-ncol=1}
+
+![Github orgs](./images/github_orgs.png)
+
+Julia Github organisations <https://julialang.org/community/>
+
+:::
+
+## Speed and Performance
+
+- Julia is known for its speed and performance, comparable to C++ and FORTRAN. 
+  - JIT (Just-in-time compilation)
+  - SIMD (Single Instruction, Multiple Data) vectorization and memory mapping.
+  - Built-in support for parallelism and distributed computing.
+  - High Performance Heterogeneous Computing.
+
+
+## Heterogeneous what? {.scrollable .smaller}
+
+Say you call a machine learning training function (e.g using Flux package):
+
+```julia
+using Flux
+
+loss(x, y) = crossentropy(model(x), y)
+train!(loss, params(model), dataset, optimizer)
+```
+In Julia you can simply turn the inputs into data stored in GPU memory using the gpu function from the CUDA.jl package.
+
+The exact same train! function gets called with the same arguments wrapped:
+     
+```julia
+using CUDA, Flux
+
+gmodel = gpu(model)
+gdataset = gpu(dataset)
+gloss(x, y) = crossentropy(gmodel(x), y)train!(gloss, 
+gpuparams(gmodel), gdataset, optimizer):
+```
+
+
+## JIT compilation {.scrollable .smaller}
+
+::: {#fig-pi layout-ncol=1}
+- Implementation of a numerical method to approximate π using a series (the Basel problem).
+
+![Python](./images/python_pi.png)
+
+![Julia](./images/julia_pi.png)
+
+Python vs Julia performance
+:::
+
+## More JIT compilation {.scrollable .smaller}
+
+::: {#fig-ssq layout-ncol=1}
+- calculate the sum of squares of integers from 1 to _n_.
+
+![Python](./images/python_ssq.png)
+
+![Julia](./images/julia_ssq.png)
+
+Python vs Julia performance.
+:::
+
+## Multiple dispatch {.scrollable .smaller}
+
+- Julia's multiple dispatch system enables functions to be specialised on the types of all their arguments.
+- Results in more expressive and efficient code as the most specific method is selected at runtime.
+
+```{julia}
+#| echo: true
+
+function greet(person::String, language::String)
+    if language == "English"
+        println("Hello, $person")
+    elseif language == "Spanish"
+        println("¡Hola, $person")
+    else
+        println("Language not supported")
+    end
+end
+
+greet("Alice", "English")
+greet("Carlos", "Spanish")
+greet("Steve", "Birkenhead")
+```
+
+## Garbage Collection
+- Julia has a generational non-moving mark-sweep garbage collector. Native objects are precisely scanned and foreign ones are conservatively marked.
+- <https://docs.julialang.org/en/v1/devdocs/gc/>
+
+## Package Ecosystem
+- Julia's package manager (Pkg.jl) provides access to a vast ecosystem of packages for various tasks.
+- The community actively develops and maintains packages, making it easy to extend Julia's functionality.
+- Many Python machine learning learning and R's statistics and plotting libraries are availabe.
+- Standard library includes modules for linear algebra, data manipulation, file I/O etc.  - Reduces the dependnecy on external packages.
+
+## Syntax {.scrollable .smaller}
+
+- Functions
+```julia
+function my_sum(x::Float64, y::Float64)
+    return x + y
+end
+```
+
+- Easy Parallelisation
+  - This function flips a coin 1000 times and sums the number of heads using a random boolean. Each iteration of the loop is distributed across workers and aggregated using '+' operator.
+
+```{julia}
+#| echo: true
+using Distributed # load the package
+
+nheads = @distributed (+) for i in 1:1000
+    Int(rand(Bool))
+end
+```
+
+## Syntax {.scrollable .smaller}
+- Comments and Docstrings
+  - Julia supports single-line comments with the # symbol.
+  - Multi-line comments are enclosed in #= and =#.
+  - Docstrings are enclosed in triple double-quotes """ and used for documentation.
+
+- Julia supports standard arithmetic operators like +, -, *, /, and %.
+  - The ^ operator is used for exponents.
+
+- Strings
+  - Strings are defined using double quotes, e.g., "Hello, Julia!".
+  - String interpolation uses $ for variable substitution.
+- Collections
+  - Julia offers the usual range of collections.
+    - arrays, tuples, dictionaries, and sets.
+- List Comprehensions
+- Broadcasting
+  - apply functions element-wise to arrays using broadcasting
+- Support for metaprogramming.
+
+## Broadcasting example
+
+```{julia}
+#| echo: true
+# Define two arrays
+A = [1, 2, 3, 4]
+B = [5, 6, 7, 8]
+
+# Add the corresponding elements of A and B using broadcasting
+result = A .+ B
+
+# Display the result
+println(result)
+```
+
+## List Comprehensions example
+
+```{julia}
+#| echo: true
+# Create a list of squares of numbers from 1 to 5
+squares = [x^2 for x in 1:5]
+
+# Display the result
+println(squares)
+```
+
+## Plotting example {.scrollable .smaller}
+
+```{julia}
+#| echo: true
+
+using Plots
+
+# Create some example data
+x = 1:10
+y = [i^2 for i in x]
+
+# Create a line plot
+plot(x, y, label="y = x^2", legend=true, xlabel="x", ylabel="y", title="Simple Plot")
+```
+
+## 3D plots too {.scrollable .smaller}
+```{julia}
+#| echo: true
+
+using Plots
+gr()  # Set the GR backend
+
+# Define a grid of x and y values
+x = -5:0.1:5
+y = -5:0.1:5
+
+# Create a function that depends on x and y
+f(x, y) = sin(sqrt(x^2 + y^2))
+
+# Generate the z values based on the function
+z = [f(x, y) for x in x, y in y]
+
+# Create a 3D surface plot
+surface(x, y, z, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Surface Plot")
+```
+
+## Interactive version {.scrollable .smaller}
+```{julia}
+#| echo: true
+using Plots
+plotlyjs()  # Set the PlotlyJS backend
+
+# Define a grid of x and y values
+x = -5:0.1:5
+y = -5:0.1:5
+
+# Create a function that depends on x and y
+f(x, y) = sin(sqrt(x^2 + y^2))
+
+# Generate the z values based on the function
+z = [f(x, y) for x in x, y in y]
+
+# Create an interactive 3D surface plot
+surface(x, y, z, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="Interactive 3D Surface Plot")
+```
+
+## Caveats {.smaller}
+
+- Jit compilation in Python using Numba can reduce run time almost to Julia.
+  - Numba @jit decorator is not always trivial to implement, and of course requires the package dependency.
+  - Reduced ssq calculation from 22 seconds to 1.93 seconds (0.9 seconds in Julia).
+  - Polars dataframes can be significantly faster than Julia dataframes.
+  - No Polars API for Julia.
+
+## Dataframes performance {.scrollable .smaller}
+- create a large DataFrame and perform the operation on the "Value" column by multiplying it by 2.
+
+::: {#fig-polars layout-ncol=1}
+![Pandas](./images/python_pandas.png)
+
+![Polars](./images/python_polars.png)
+
+![Julia](./images/julia_dataframes.png)
+:::
+
+## Dataframes performance {.scrollable .smaller}
+
+- Performance is equivalent to Pandas but slower than Polars.
+  - No Polars API for Julia.
+  - Maybe one day: <https://github.com/Pangoraw/Polars.jl>
+  - Or just drop Python code right into Julia, that's cool too.
+
+- Julia not seen as a tool for complex data wrangling e.g R tidyverse or Polars.
+  - DataFrames.jl only provides support functions for data manipulation.
+  - Core functionality of Julia is computation (ML, optimization, simulation, etc).
+
+## Conclusions {.scrollable .smaller}
+
+- Julia provides a solution to the two-language problem in scientific computing.
+- Active development and it feels like it's steadily gaining traction.
+- Growing ecosystem of scientific computing packages, with interoperability with established languages like Python and R.
+- Interesting for Hartree as the language has parallelism by design.
+  - RSE, DS, and SCD could develop in 1 language.
+- Potential MATLAB killer.
+- To find out more: <https://julialang.org/>
+
+... it's an interesting aside.
+
+## Also {.smaller}
+
+_Quarto documents are awesome... but that's another skills n' learn!_ ;)
